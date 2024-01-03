@@ -3,6 +3,8 @@ require_relative 'class/car'
 require_relative 'class/rental'
 require_relative 'class/option'
 require_relative 'services/price_calculator'
+require_relative 'services/commission_calculator'
+require_relative 'services/option_price_calculator'
 
 def read_data(file_path)
   file = File.read(file_path)
@@ -18,23 +20,30 @@ def generate_output(data)
   options = data['options'].map { |option_data| Option.new(option_data['type'], option_data['rental_id']) }
 
   { "rentals" => rentals.map do |rental|
-      rental_options = options.select { |o| o.rental_id == rental.id }
-      option_cost = Services::PriceCalculator.calculate_option_prices(rental_options, rental.duration)
-      price = Services::PriceCalculator.calculate_price(rental)
-      commission = Services::PriceCalculator.calculate_commission(price, rental.duration)
-      payments = Services::PriceCalculator.calculate_payments(price, commission, rental.duration, rental_options)
-      {
-        "id" => rental.id,
-        "options" => options.select { |o| o.rental_id == rental.id }.map(&:type),
-        "actions" => [
-          { "who" => "driver", "type" => "debit", "amount" => payments["driver"]["amount"] },
-          { "who" => "owner", "type" => "credit", "amount" => payments["owner"]["amount"] },
-          { "who" => "insurance", "type" => "credit", "amount" => payments["insurance"]["amount"] },
-          { "who" => "assistance", "type" => "credit", "amount" => payments["assistance"]["amount"] },
-          { "who" => "drivy", "type" => "credit", "amount" => payments["drivy"]["amount"] }
-        ]
-      }
-    end
+    rental_options = options.select { |o| o.rental_id == rental.id }
+    price_calculator = Services::PriceCalculator.new(rental, rental.car)
+    option_calculator = Services::OptionPriceCalculator.new(rental_options, rental.duration)
+    commission_calculator = Services::CommissionCalculator.new(price_calculator.calculate, rental.duration)
+
+    base_price = price_calculator.calculate
+    option_price = option_calculator.calculate
+    total_price = base_price + option_price
+    commission = commission_calculator.calculate
+
+    owner_revenue = base_price - commission.values.sum + option_calculator.calculate_for_owner
+
+    {
+      "id" => rental.id,
+      "options" => rental_options.map(&:type),
+      "actions" => [
+        { "who" => "driver", "type" => "debit", "amount" => total_price },
+        { "who" => "owner", "type" => "credit", "amount" => owner_revenue },
+        { "who" => "insurance", "type" => "credit", "amount" => commission[:insurance_fee] },
+        { "who" => "assistance", "type" => "credit", "amount" => commission[:assistance_fee] },
+        { "who" => "drivy", "type" => "credit", "amount" => commission[:drivy_fee] + option_calculator.calculate_for_drivy }
+      ]
+    }
+  end
   }
 end
 
