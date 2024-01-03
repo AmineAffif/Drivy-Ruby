@@ -7,8 +7,16 @@ require_relative 'services/commission_calculator'
 require_relative 'services/option_price_calculator'
 
 def read_data(file_path)
-  file = File.read(file_path)
-  JSON.parse(file)
+  begin
+    file = File.read(file_path)
+    JSON.parse(file)
+  rescue Errno::ENOENT
+    puts "File not found : #{file_path}"
+    exit
+  rescue JSON::ParserError
+    puts "File format error ( JSON expected for : #{file_path} )"
+    exit
+  end
 end
 
 def generate_output(data)
@@ -47,11 +55,15 @@ def generate_output(data)
   }
 end
 
-data = read_data('data/input.json')
-output = generate_output(data)
+begin
+  data = read_data('data/input.json')
+  output = generate_output(data)
+  File.open('data/expected_output.json', 'w') do |file|
+    json_output = JSON.pretty_generate(output)
+    json_output.gsub!(/\[\s*\]/, '[]') # Remove line breaks from empty arrays
+    file.write(json_output)
+  end
 
-File.open('data/expected_output.json', 'w') do |file|
-  json_output = JSON.pretty_generate(output)
-  json_output.gsub!(/\[\s*\]/, '[]') # Remove line breaks from empty arrays
-  file.write(json_output)
+  rescue StandardError => e
+  puts "An error happened : #{e.message}"
 end

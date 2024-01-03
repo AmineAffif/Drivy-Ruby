@@ -3,6 +3,13 @@ module Services
     COMMISSION_RATE = 0.3
 
     def initialize(price, duration)
+      unless price.is_a?(Numeric) && price >= 0
+        raise ArgumentError, "Price must be superior or equal to 0."
+      end
+      unless duration.is_a?(Integer) && duration > 0
+        raise ArgumentError, "Duration must be over 0."
+      end
+
       @price = price
       @duration = duration
     end

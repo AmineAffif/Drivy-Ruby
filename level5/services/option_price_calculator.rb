@@ -1,6 +1,10 @@
 module Services
   class OptionPriceCalculator
     def initialize(options, duration)
+      unless duration.is_a?(Integer) && duration > 0
+        raise ArgumentError, "Duration must be over 0."
+      end
+      
       @options = options
       @duration = duration
     end
