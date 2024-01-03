@@ -22,5 +22,7 @@ data = read_data('data/input.json')
 output = generate_output(data)
 
 File.open('data/expected_output.json', 'w') do |file|
-  file.write(JSON.pretty_generate(output))
+  json_output = JSON.pretty_generate(output)
+  json_output.gsub!(/\[\s*\]/, '[]') # Remove line breaks from empty arrays
+  file.write(json_output)
 end
