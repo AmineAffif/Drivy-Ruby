@@ -1,35 +1,27 @@
-## Guidelines
-
-**For each level, write code that creates a new `data/output.json` file from the data in `data/input.json`.
-An `expected_output.json` file is available to give you a reference on what result is expected.**
-
-- Clone this repo (do **not** fork it)
-- Solve the levels in ascending order
-- Only do one commit per level and include the `.git` when submiting your test
-
-## Pointers
-
-You can have a look at the higher levels, but please do the simplest thing that could work for the level you're currently solving.
-
-The levels become more complex over time, so you will probably have to re-use some code and adapt it to the new requirements.
-A good way to solve this is by using OOP, adding new layers of abstraction when they become necessary and possibly write tests so you don't break what you have already done.
-
-Don't hesitate to write [shameless code](http://red-badger.com/blog/2014/08/20/i-spent-3-days-with-sandi-metz-heres-what-i-learned/) at first, and then refactor it in the next levels.
-
-For higher levels we are interested in seeing code that is clean, extensible and robust, so don't overlook edge cases, use exceptions where needed, ...
-
 Please also note that:
 
 - All prices are stored as integers (in cents)
 - Running `$ ruby main.rb` from the level folder must generate the desired output, but of course feel free to add more files if needed.
 
-## Sending Your Results
+## Business model error found ⚠️ ⛔️ ✋
 
-Once you are done, please send your results to someone from Qraft.
+Every rental under the line (or in the red area) is not profitable for the compagny.
 
-- If you are already in discussion with us, send it directly to the person you are talking to.
+![analyse_rentabilite_lineaire](https://github.com/AmineAffif/Drivy-Ruby/assets/45182137/2916671c-c6f8-4c10-a553-740bd5d08a5a)
 
-You can send your Github project link or zip your directory and send it via email.
-If you do not use Github, don't forget to attach your `.git` folder.
+The combination between **Low rental cost** and high **duration** make a big loss because of the rule :
+- 1€/day goes to the roadside assistance
 
-Good luck!
+Currently, Drivy pays this fee.
+If the driver had to pay this fee, we could be profitable, but the expected_output.json will not be right as expected by the exercice.
+
+For exemple here for a rental that a driver will pay 40€ for 12 days, we are not profitable.
+I saw this problem only when I was doing the Unit tests on my CommissionCalculator Service.
+
+<img width="989" alt="image" src="https://github.com/AmineAffif/Drivy-Ruby/assets/45182137/fd15921e-3a87-482d-b2b2-7f7cb6979159">
+
+This is the **rental data** in my unit test:
+<img width="766" alt="image" src="https://github.com/AmineAffif/Drivy-Ruby/assets/45182137/ccf29512-499b-43f8-a1d1-cdd9d27ab89c">
+
+So when I discovered this issue with my unit test, I decided to write à Ruby script that will draw a **simulation of rental price crossed with the duration**.
+**You can find the two files for the two diagram (and the images that they generated) beside levels folders**
